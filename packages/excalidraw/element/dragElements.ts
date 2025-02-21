@@ -10,7 +10,7 @@ import type {
   NullableGridSize,
   PointerDownState,
 } from "../types";
-import { getBoundTextElement, getMinTextElementWidth } from "./textElement";
+import { getBoundTextElement } from "./textElement";
 import type Scene from "../scene/Scene";
 import {
   isArrowElement,
@@ -22,6 +22,7 @@ import {
 import { getFontString } from "../utils";
 import { TEXT_AUTOWRAP_THRESHOLD } from "../constants";
 import { getGridPoint } from "../snapping";
+import { getMinTextElementWidth } from "./textMeasurements";
 
 export const dragSelectedElements = (
   pointerDownState: PointerDownState,
@@ -42,9 +43,20 @@ export const dragSelectedElements = (
     return;
   }
 
-  const selectedElements = _selectedElements.filter(
-    (el) => !(isElbowArrow(el) && el.startBinding && el.endBinding),
-  );
+  const selectedElements = _selectedElements.filter((element) => {
+    if (isElbowArrow(element) && element.startBinding && element.endBinding) {
+      const startElement = _selectedElements.find(
+        (el) => el.id === element.startBinding?.elementId,
+      );
+      const endElement = _selectedElements.find(
+        (el) => el.id === element.endBinding?.elementId,
+      );
+
+      return startElement && endElement;
+    }
+
+    return true;
+  });
 
   // we do not want a frame and its elements to be selected at the same time
   // but when it happens (due to some bug), we want to avoid updating element
@@ -78,10 +90,8 @@ export const dragSelectedElements = (
 
   elementsToUpdate.forEach((element) => {
     updateElementCoords(pointerDownState, element, adjustedOffset);
-    if (
+    if (!isArrowElement(element)) {
       // skip arrow labels since we calculate its position during render
-      !isArrowElement(element)
-    ) {
       const textElement = getBoundTextElement(
         element,
         scene.getNonDeletedElementsMap(),
@@ -89,10 +99,10 @@ export const dragSelectedElements = (
       if (textElement) {
         updateElementCoords(pointerDownState, textElement, adjustedOffset);
       }
+      updateBoundElements(element, scene.getElementsMapIncludingDeleted(), {
+        simultaneouslyUpdated: Array.from(elementsToUpdate),
+      });
     }
-    updateBoundElements(element, scene.getElementsMapIncludingDeleted(), {
-      simultaneouslyUpdated: Array.from(elementsToUpdate),
-    });
   });
 };
 

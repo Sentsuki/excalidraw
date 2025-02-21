@@ -7,12 +7,10 @@ import { debounce } from "lodash";
 import type { AppClassProperties } from "../types";
 import { isTextElement, newTextElement } from "../element";
 import type { ExcalidrawTextElement } from "../element/types";
-import { measureText } from "../element/textElement";
 import { addEventListener, getFontString } from "../utils";
 import { KEYS } from "../keys";
 import clsx from "clsx";
-import { atom, useAtom } from "jotai";
-import { jotaiScope } from "../jotai";
+import { atom, useAtom } from "../editor-jotai";
 import { t } from "../i18n";
 import { isElementCompletelyInViewport } from "../element/sizeHelpers";
 import { randomInteger } from "../random";
@@ -21,6 +19,7 @@ import { useStable } from "../hooks/useStable";
 
 import "./SearchMenu.scss";
 import { round } from "../../math";
+import { measureText } from "../element/textMeasurements";
 
 const searchQueryAtom = atom<string>("");
 export const searchItemInFocusAtom = atom<number | null>(null);
@@ -58,7 +57,7 @@ export const SearchMenu = () => {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [inputValue, setInputValue] = useAtom(searchQueryAtom, jotaiScope);
+  const [inputValue, setInputValue] = useAtom(searchQueryAtom);
   const searchQuery = inputValue.trim() as SearchQuery;
 
   const [isSearching, setIsSearching] = useState(false);
@@ -70,10 +69,7 @@ export const SearchMenu = () => {
   const searchedQueryRef = useRef<SearchQuery | null>(null);
   const lastSceneNonceRef = useRef<number | undefined>(undefined);
 
-  const [focusIndex, setFocusIndex] = useAtom(
-    searchItemInFocusAtom,
-    jotaiScope,
-  );
+  const [focusIndex, setFocusIndex] = useAtom(searchItemInFocusAtom);
   const elementsMap = app.scene.getNonDeletedElementsMap();
 
   useEffect(() => {
@@ -611,7 +607,6 @@ const getMatchedLines = (
         textToStart,
         getFontString(textElement),
         textElement.lineHeight,
-        true,
       );
 
       // measureText returns a non-zero width for the empty string
@@ -625,7 +620,6 @@ const getMatchedLines = (
           lineIndexRange.line,
           getFontString(textElement),
           textElement.lineHeight,
-          true,
         );
 
         const spaceToStart =
