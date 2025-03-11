@@ -10,7 +10,6 @@ import {
 import { bindLinearElement } from "./binding";
 import { LinearElementEditor } from "./linearElementEditor";
 import { newArrowElement, newElement } from "./newElement";
-import type { SceneElementsMap } from "./types";
 import {
   type ElementsMap,
   type ExcalidrawBindableElement,
@@ -31,7 +30,7 @@ import {
   isFlowchartNodeElement,
 } from "./typeChecks";
 import { invariant, toBrandedType } from "../utils";
-import { pointFrom, type LocalPoint } from "../../math";
+import { pointFrom, type LocalPoint } from "@excalidraw/math";
 import { aabbForElement } from "../shapes";
 import { updateElbowArrowPoints } from "./elbowArrow";
 
@@ -472,7 +471,7 @@ const createBindingArrow = (
 
   const update = updateElbowArrowPoints(
     bindingArrow,
-    toBrandedType<SceneElementsMap>(
+    toBrandedType<NonDeletedSceneElementsMap>(
       new Map([
         ...elementsMap.entries(),
         [startBindingElement.id, startBindingElement],
